@@ -4,7 +4,7 @@
 
 In this project, I applied data engineering and machine learning pipelines to analyze disaster data from Figure Eight and built a model for an API that classifies disaster messages.
 
-The **data** directory contains a data set which are real messages that were sent during disaster events. I created a machine learning pipeline to categorize these events so that related agency could be assigned for support. This project also includes a web app where an emergency worker can input a message and get classification results in categories. The web app also displays visualizations of the data.
+The **data** directory contains real-world messages sent during disaster events. I created a machine learning pipeline to categorize these events to assign the related agencies for support. This project also includes a web app where people can input a message and get classification results in categories in less one second.
 
 ## 2. Project Components
 
