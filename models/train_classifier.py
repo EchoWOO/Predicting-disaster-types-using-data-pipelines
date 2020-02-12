@@ -7,6 +7,7 @@ from pprint import pprint
 import re
 import sys
 import nltk
+# reminder to download everytime changing the file location
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
@@ -29,36 +30,31 @@ warnings.filterwarnings('ignore')
 
 def load_data(database_filepath):
     """
-    Loads data from SQL Database
-
-    Args:
-    database_filepath: SQL database file
+    Inputs:
+    database file path
 
     Returns:
-    X pandas_dataframe: Features dataframe
-    Y pandas_dataframe: Target dataframe
-    category_names list: Target labels
+    X: dataframe training set
+    Y: dataframe testing set
+    names list: column names
     """
     engine = create_engine('sqlite:///{}'.format(database_filepath))
     df = pd.read_sql_table('DisasterResponse', con = engine)
     X,Y = df['message'], df.iloc[:,4:]
 
-    # Y['related'] contains three distinct values
-    # mapping extra values to `1`
+    # mapping three distinct values to 1
     Y['related']=Y['related'].map(lambda x: 1 if x == 2 else x)
-    category_names = Y.columns
+    names = Y.columns
 
-    return X, Y, category_names
+    return X, Y, names
 
 def tokenize(text):
     """
-    Tokenizes text data
-
-    Args:
-    text str: Messages as text data
+    Inputs:
+    text: string Messages
 
     Returns:
-    words list: Processed text after normalizing, tokenizing and lemmatizing
+    words: normalized, tokenized and lemmatized words
     """
     # Normalize text
     text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower())
@@ -70,7 +66,7 @@ def tokenize(text):
     stopwords_ = stopwords.words("english")
     words = [word for word in words if word not in stopwords_]
 
-    # extract root form of words
+    # lemmatize words
     words = [WordNetLemmatizer().lemmatize(word, pos='v') for word in words]
 
     return words
@@ -78,23 +74,20 @@ def tokenize(text):
 
 def build_model():
     """
-    Build model with GridSearchCV
-
-    Returns:
-    Trained model after performing grid search
+    build models
     """
-    # model pipeline
+    # define pipeline
     pipeline = Pipeline([('vect', CountVectorizer(tokenizer=tokenize)),
                          ('tfidf', TfidfTransformer()),
                          ('clf', MultiOutputClassifier(
                             OneVsRestClassifier(LinearSVC())))])
 
-    # hyper-parameter grid
+    # define hyper-parameter grid
     parameters = {'vect__ngram_range': ((1, 1), (1, 2)),
                   'vect__max_df': (0.75, 1.0)
                   }
 
-    # create model
+    # create models
     model = GridSearchCV(estimator=pipeline,
             param_grid=parameters,
             verbose=3,
@@ -104,9 +97,7 @@ def build_model():
 
 def evaluate_model(model, X_test, Y_test, category_names):
     """
-    Shows model's performance on test data
-
-    Args:
+    Inputs:
     model: trained model
     X_test: Test features
     Y_test: Test targets
@@ -116,17 +107,17 @@ def evaluate_model(model, X_test, Y_test, category_names):
     # predict
     y_pred = model.predict(X_test)
 
-    # print classification report
+    # print classification
     print(classification_report(Y_test.values, y_pred, target_names=category_names))
 
-    # print accuracy score
+    # print accuracy
     print('Accuracy: {}'.format(np.mean(Y_test.values == y_pred)))
 
 
 def save_model(model, model_filepath):
     """
     Saves the model to a Python pickle file
-    Args:
+    Inputs:
     model: Trained model
     model_filepath: Filepath to save the model
     """
@@ -136,6 +127,9 @@ def save_model(model, model_filepath):
 
 
 def main():
+    """
+    Execute all functions above
+    """
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
@@ -154,7 +148,7 @@ def main():
         print('Saving model...\n    MODEL: {}'.format(model_filepath))
         save_model(model, model_filepath)
 
-        print('Trained model saved!')
+        print('Trained model successfully saved!')
 
     else:
         print('Please provide the filepath of the disaster messages database '\

@@ -3,23 +3,18 @@ import sys
 import pandas as pd
 from sqlalchemy import create_engine
 
-def load_data(messages_file_path, categories_file_path):
+def load_data(messages_file, categories_file):
     """
-    - Takes inputs as two CSV files
-    - Imports them as pandas dataframe.
-    - Merges them into a single dataframe
+    Inputs:
+    messages_file_path: string
+    categories_file_path: string
 
-    Args:
-    messages_file_path str: Messages CSV file
-    categories_file_path str: Categories CSV file
-
-    Returns:
-    merged_df pandas_dataframe: Dataframe obtained from merging the two input\
-    data
+    Outputs:
+    df: merged message and categories
     """
 
-    messages = pd.read_csv(messages_file_path)
-    categories = pd.read_csv(categories_file_path)
+    messages = pd.read_csv(messages_file)
+    categories = pd.read_csv(categories_file)
 
     df = messages.merge(categories, on='id')
 
@@ -27,69 +22,68 @@ def load_data(messages_file_path, categories_file_path):
 
 def clean_data(df):
     """
-    - Cleans the combined dataframe for use by ML model
-
-    Args:
-    df pandas_dataframe: Merged dataframe returned from load_data() function
+    Inputs:
+    df: cleaned dataframe
 
     Returns:
     df pandas_dataframe: Cleaned data to be used by ML model
     """
 
-    # Split categories into separate category columns
+    # Split categories
     categories = df['categories'].str.split(";",expand = True)
 
-    # select the first row of the categories dataframe
+    # select the first row
     row = categories.iloc[0,:].values
 
-    # use this row to extract a list of new column names for categories.
+    # extract categories
     new_cols = [r[:-2] for r in row]
 
-    # rename the columns of `categories`
+    # rename the columns
     categories.columns = new_cols
 
-    # Convert category values to just numbers 0 or 1.
+    # Convert category values
     for column in categories:
 
-        # set each value to be the last character of the string
+        # extract the string
         categories[column] = categories[column].str[-1]
 
-        # convert column from string to numeric
+        # convert to numeric
         categories[column] = pd.to_numeric(categories[column])
 
-    # drop the original categories column from `df`
+    # drop the original column
     df.drop('categories', axis = 1, inplace = True)
 
-    # concatenate the original dataframe with the new `categories` dataframe
+    # concatenate the original dataframe with the split dataframe
     df[categories.columns] = categories
 
-    # drop duplicates
+    # remove duplicates
     df.drop_duplicates(inplace = True)
 
     return df
 
 def save_data(df, database_file_name):
     """
-    Saves cleaned data to an SQL database
-
-    Args:
-    df pandas_dataframe: Cleaned data returned from clean_data() function
-    database_file_name str: File path of SQL Database into which the cleaned\
-    data is to be saved
+    Inputs
+    df: the cleaned and concatenated dataframe
 
     Returns:
-    None
+    write table to the sqlite database
     """
 
+    # connect to dataframe
     engine = create_engine('sqlite:///{}'.format(database_file_name))
-    db_file_name = database_file_name.split("/")[-1] # extract file name from \
-                                                     # the file path
+    db_file_name = database_file_name.split("/")[-1]
+
+    #name and write table
     table_name = db_file_name.split(".")[0]
     df.to_sql(table_name, engine, index=False, if_exists = 'replace')
 
 
 def main():
     if len(sys.argv) == 4:
+    """
+    Execute all the functions above
+    """
 
         messages_filepath, categories_filepath, database_filepath = sys.argv[1:]
 
