@@ -1,4 +1,5 @@
-# Disaster Response Pipeline
+# Predicting Disaster Types Using Data pipelines
+#### Udacity Data Science Nanodegree Project: Disaster Response Pipeline
 
 ## 1. Overview
 
