@@ -86,7 +86,7 @@ def index():
 
     count_props=100*np.array(list(top_20.values()))/df.shape[0]
     # create visuals
-    figures = [
+    graphs = [
         {
             'data': [
                 Bar(
@@ -147,11 +147,11 @@ def index():
     ]
 
     # encode plotly graphs in JSON
-    ids = ["figure-{}".format(i) for i, _ in enumerate(figures)]
-    figuresJSON = json.dumps(figures, cls=plotly.utils.PlotlyJSONEncoder)
+    ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
+    graphsJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
 
-    # render web page with plotly figures
-    return render_template('master.html', ids=ids, figuresJSON=figuresJSON, data_set=df)
+    # render web page with plotly graphs
+    return render_template('master.html', ids=ids, graphsJSON=graphsJSON, data_set=df)
 
 # web page that handles user query and displays model results
 @app.route('/go')
